@@ -119,6 +119,7 @@ fn spawn_instance(
                 index,
                 goldberg_so,
                 &profile,
+                &handler.copy_instead,
             )?
         }
         None => game_dir.to_path_buf(),

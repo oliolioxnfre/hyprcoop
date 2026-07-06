@@ -47,6 +47,13 @@ pub struct GameHandler {
     pub max_players: u8,
     #[serde(default)]
     pub config_patch: Vec<ConfigPatch>,
+    /// Executables (paths relative to the game dir) that must be real copies
+    /// in each shadow rather than symlinks, so their `$ORIGIN`-relative RPATH
+    /// resolves to the shadow's Goldberg `lib64` instead of the real install.
+    /// Needed for helper binaries the game spawns itself (e.g. DST's dedicated
+    /// server), which don't inherit our `LD_LIBRARY_PATH` ahead of their RPATH.
+    #[serde(default)]
+    pub copy_instead: Vec<String>,
     /// In-game instructions shown to players during the session.
     #[serde(default)]
     pub notes: Option<String>,

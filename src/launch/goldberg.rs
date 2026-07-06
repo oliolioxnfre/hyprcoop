@@ -34,6 +34,7 @@ pub fn ensure_goldberg() -> Result<PathBuf> {
 /// the path to the Steam API lib (and the exe), which are materialized so we
 /// can swap in Goldberg's libsteam_api.so and drop steam_appid.txt plus a
 /// per-instance steam_settings dir beside the .so (where gbe_fork looks).
+#[allow(clippy::too_many_arguments)]
 pub fn build_shadow(
     game_dir: &Path,
     exe_rel: &str,
@@ -42,6 +43,7 @@ pub fn build_shadow(
     instance: usize,
     goldberg_so: &Path,
     save_dir: &Path,
+    copy_instead: &[String],
 ) -> Result<PathBuf> {
     let shadow = profiles::data_dir()
         .join("shadow")
@@ -72,6 +74,23 @@ pub fn build_shadow(
     }
     std::fs::copy(goldberg_so, &api_dest)
         .with_context(|| format!("installing goldberg at {}", api_dest.display()))?;
+
+    // Replace selected executables' symlinks with real copies so their
+    // $ORIGIN-relative RPATH resolves to this shadow's Goldberg lib64.
+    for rel in copy_instead {
+        let src = game_dir.join(rel);
+        if !src.is_file() {
+            continue; // not present in this install; nothing to copy
+        }
+        let dst = shadow.join(rel);
+        if dst.is_symlink() || dst.exists() {
+            std::fs::remove_file(&dst).ok();
+        }
+        std::fs::copy(&src, &dst)
+            .with_context(|| format!("copying {} into shadow", rel))?;
+        let perms = std::fs::metadata(&src)?.permissions();
+        std::fs::set_permissions(&dst, perms).ok();
+    }
 
     // gbe_fork reads steam_settings from the directory containing the .so;
     // steam_appid.txt is also honored next to the exe (and cwd), so write both.

@@ -18,6 +18,11 @@ steam_api_lib = "bin64/lib64/libsteam_api.so"
 goldberg = true
 max_players = 4
 args = []
+# DST hosting spawns these dedicated-server binaries itself; they must be real
+# copies in the shadow so their RPATH ($ORIGIN/lib64) loads the Goldberg
+# libsteam_api.so — otherwise the servers run on real Steam, never announce on
+# the emu's LAN network, and clients can't find the hosted game.
+copy_instead = ["bin64/dontstarve_dedicated_server_nullrenderer_x64"]
 
 notes = """
 In every instance: Play → Play Offline.
