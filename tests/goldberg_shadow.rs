@@ -9,6 +9,7 @@ fn fake_game_dir(root: &Path) {
     std::fs::create_dir_all(root.join("bin64/lib64")).unwrap();
     std::fs::create_dir_all(root.join("data")).unwrap();
     std::fs::write(root.join("bin64/game_x64"), "exe").unwrap();
+    std::fs::write(root.join("bin64/dedicated_server"), "dedi-exe").unwrap();
     std::fs::write(root.join("bin64/lib64/libsteam_api.so"), "real-steam").unwrap();
     std::fs::write(root.join("bin64/lib64/libother.so"), "other").unwrap();
     std::fs::write(root.join("data/assets.bin"), "assets").unwrap();
@@ -34,6 +35,7 @@ fn shadow_swaps_goldberg_and_links_the_rest() {
         1,
         &fake_goldberg,
         &save_dir,
+        &["bin64/dedicated_server".to_string()],
     )
     .expect("build shadow");
 
@@ -41,6 +43,12 @@ fn shadow_swaps_goldberg_and_links_the_rest() {
     let api = shadow.join("bin64/lib64/libsteam_api.so");
     assert_eq!(std::fs::read_to_string(&api).unwrap(), "goldberg");
     assert!(!api.is_symlink());
+
+    // copy_instead binaries are real copies (so their $ORIGIN RPATH resolves
+    // into the shadow), while the main exe stays a symlink.
+    let dedi = shadow.join("bin64/dedicated_server");
+    assert!(!dedi.is_symlink(), "dedicated server must be a real copy");
+    assert_eq!(std::fs::read_to_string(&dedi).unwrap(), "dedi-exe");
 
     // Untouched entries are symlinks back to the real install.
     let exe = shadow.join("bin64/game_x64");
@@ -89,6 +97,7 @@ fn shadow_swaps_goldberg_and_links_the_rest() {
         1,
         &fake_goldberg,
         &save_dir,
+        &["bin64/dedicated_server".to_string()],
     )
     .expect("rebuild shadow");
     assert_eq!(shadow, shadow2);

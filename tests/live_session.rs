@@ -38,6 +38,7 @@ fn mpv_handler() -> LoadedHandler {
             ],
             max_players: 4,
             config_patch: vec![],
+            copy_instead: vec![],
             notes: None,
         },
         game_dir: Some("/usr".into()),

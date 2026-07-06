@@ -88,10 +88,17 @@ Notes:
 - **First run of a new profile** may ask the game to go fullscreen; the
   `suppress_event fullscreen` rule keeps it tiled anyway, and hyprcoop patches
   `client.ini` to windowed mode for later runs.
-- **LAN discovery is same-machine and firewall-safe by design:** each instance
-  also sends Goldberg discovery to `127.0.0.1` (via `custom_broadcasts.txt`), so
-  a `deny incoming` firewall like Omarchy's default doesn't block it — loopback
-  is always allowed. No `ufw` changes needed.
+- **LAN discovery is same-machine and firewall-safe by design.** Two pieces make
+  it work with no `ufw` changes:
+  - Games that spawn their own helper servers (DST's dedicated server) get those
+    binaries **copied** into the shadow (`copy_instead` in the handler), so their
+    `$ORIGIN/lib64` RPATH loads the Goldberg `libsteam_api.so`. Otherwise they'd
+    run on real Steam and never announce on the emu's LAN network — the servers
+    simply wouldn't appear, no matter the firewall.
+  - Each instance sends Goldberg discovery to `127.0.0.1` across the emu's whole
+    query port range (`custom_broadcasts.txt`, `47584–47593`), so announces reach
+    peers over loopback — which a `deny incoming` firewall (Omarchy's default)
+    always allows, unlike the `255.255.255.255` broadcast it drops.
 - **If instances still can't see each other** in the LAN tab, try the
   experimental Goldberg build (the variant Nucleus uses for DST on Windows):
   `cp ~/.local/share/hyprcoop/goldberg/libsteam_api.experimental.so \
