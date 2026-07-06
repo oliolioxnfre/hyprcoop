@@ -49,6 +49,36 @@ cargo build --release
 8. Quit the games (or switch back to the hyprcoop terminal and press `e`)
    — gaps, borders, and waybar come right back.
 
+## Controller keyboard
+
+Hold your controller's two center buttons for 2 seconds to pop up an on-screen
+keyboard for typing server names, passwords, chat, etc:
+
+- **DualShock 4:** Options + Share
+- **Xbox:** Menu + View (Start + Select)
+- **Switch Pro:** (+) and (−)
+
+(All three report the same evdev codes, so it's one unified combo.) Navigate
+with the **d-pad**, press a key with **✕ / A / B (south)**, toggle case with
+**△ / Y / X (north)**, erase with **□ / X / Y (west)**, cancel with **○ / B / A
+(east)**. Pick **Done** to type the text into your game instance.
+
+Under the hood, hyprcoop creates a **uinput virtual keyboard** (no extra
+dependency — built on the `evdev` crate) and replays your text into the
+triggering player's window. It needs write access to `/dev/uinput`
+(`hyprcoop doctor` checks this); on most desktops the `input` group / udev
+`uaccess` rule already grants it.
+
+Notes:
+- Text is buffered while you edit and injected on **Done**, so keystrokes land
+  in the game, not the launcher.
+- Your controller still drives your game character while the keyboard is open
+  (we don't grab the pad in v1) — open it from a menu/text field. Exclusive pad
+  grabbing is a planned improvement.
+- If you have a keyboard+mouse player, their `stay_focused` window can fight the
+  focus hand-off; the keyboard is most reliable in all-controller sessions for
+  now.
+
 ## Notes & limitations
 
 - **One keyboard/mouse player max.** Wayland routes all keyboards to the focused
