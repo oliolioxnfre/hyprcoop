@@ -1,0 +1,43 @@
+# Don't Starve Together — native Linux build
+name = "Don't Starve Together"
+short = "dst"
+steam_appid = 322330
+exe = "bin64/dontstarve_steam_x64"
+workdir = "bin64"
+game_dirs = [
+    "~/.steam/steam/steamapps/common/Don't Starve Together",
+    "~/.local/share/Steam/steamapps/common/Don't Starve Together",
+]
+# Confirmed by probing: DST's window class under Hyprland/XWayland.
+window_class = "dontstarve_steam_x64"
+# Per-player isolated config dir (bound over $HOME path in the sandbox).
+config_dir = "~/.klei"
+# Relative path of the Steam API lib inside the game dir; swapped for
+# Goldberg in shadow copies used by instances 2..N.
+steam_api_lib = "bin64/lib64/libsteam_api.so"
+goldberg = true
+max_players = 4
+args = []
+
+notes = """
+In every instance: Play → Play Offline.
+One player: Host Game → create a LOCAL ONLY world.
+Everyone else: Browse Games → LAN tab → join.
+"""
+
+[env]
+LD_LIBRARY_PATH = "{game_dir}/bin64/lib64"
+
+# Force windowed mode in each profile's client.ini (created by the game on
+# first run; patched on subsequent launches). First-run fullscreen requests
+# are suppressed compositor-side via a Hyprland window rule anyway.
+[[config_patch]]
+file = "DoNotStarveTogether/*/client.ini"
+section = "GRAPHICS"
+set = { fullscreen = "false" }
+
+# Don't pause when a window loses focus — all instances but one are unfocused.
+[[config_patch]]
+file = "DoNotStarveTogether/*/client.ini"
+section = "MISC"
+set = { autopause = "false", consoleautopause = "false" }
