@@ -82,6 +82,11 @@ fn doctor() -> Result<()> {
         launch::goldberg::goldberg_so_path().is_file(),
         "run `hyprcoop fetch-goldberg`",
     );
+    check(
+        "/dev/uinput writable (controller keyboard)",
+        uinput_writable(),
+        "add udev rule / join the `input` group so hyprcoop can create a virtual keyboard",
+    );
 
     match handler::load_handlers() {
         Ok(handlers) => {
@@ -94,6 +99,13 @@ fn doctor() -> Result<()> {
             }
         }
         Err(err) => check("game handlers", false, &format!("{err:#}")),
+    }
+
+    fn uinput_writable() -> bool {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open("/dev/uinput")
+            .is_ok()
     }
 
     let pads = input::scan_pads();

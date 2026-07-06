@@ -211,10 +211,10 @@ impl App {
         let ret = self.osk_return.take();
 
         // Send our terminal back where it came from.
-        if let Some(ret) = &ret {
-            if let Some(term) = &ret.terminal {
-                let _ = hypr::dismiss_osk_terminal(term, &ret.terminal_home_ws);
-            }
+        if let Some(ret) = &ret
+            && let Some(term) = &ret.terminal
+        {
+            let _ = hypr::dismiss_osk_terminal(term, &ret.terminal_home_ws);
         }
 
         if commit && !osk.strokes().is_empty() {
