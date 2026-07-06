@@ -88,8 +88,12 @@ Notes:
 - **First run of a new profile** may ask the game to go fullscreen; the
   `suppress_event fullscreen` rule keeps it tiled anyway, and hyprcoop patches
   `client.ini` to windowed mode for later runs.
-- **If instances can't see each other** in the LAN tab, try the experimental
-  Goldberg build (this is the variant Nucleus uses for DST on Windows):
+- **LAN discovery is same-machine and firewall-safe by design:** each instance
+  also sends Goldberg discovery to `127.0.0.1` (via `custom_broadcasts.txt`), so
+  a `deny incoming` firewall like Omarchy's default doesn't block it — loopback
+  is always allowed. No `ufw` changes needed.
+- **If instances still can't see each other** in the LAN tab, try the
+  experimental Goldberg build (the variant Nucleus uses for DST on Windows):
   `cp ~/.local/share/hyprcoop/goldberg/libsteam_api.experimental.so \
       ~/.local/share/hyprcoop/goldberg/libsteam_api.so`
 - Progress/skins live in the per-player hyprcoop profiles, separate from your

@@ -69,6 +69,17 @@ fn shadow_swaps_goldberg_and_links_the_rest() {
     assert!(user_ini.contains("local_save_path="), "{user_ini}");
     assert!(save_dir.join("gse-saves").is_dir());
 
+    // Same-machine LAN discovery over loopback, one entry per port in
+    // gbe_fork's query range so a peer on any of those ports is reached.
+    let broadcasts = std::fs::read_to_string(settings.join("custom_broadcasts.txt")).unwrap();
+    assert!(broadcasts.contains("127.0.0.1:47584"), "{broadcasts}");
+    assert!(broadcasts.contains("127.0.0.1:47593"), "{broadcasts}");
+    assert_eq!(
+        broadcasts.lines().filter(|l| l.starts_with("127.0.0.1:")).count(),
+        10,
+        "expected the full query port range: {broadcasts}"
+    );
+
     // Rebuilding for the same instance replaces the shadow cleanly.
     let shadow2 = build_shadow(
         &game,

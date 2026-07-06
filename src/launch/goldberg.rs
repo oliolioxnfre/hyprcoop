@@ -5,6 +5,12 @@ use anyhow::{bail, Context, Result};
 
 use crate::profiles;
 
+/// gbe_fork's LAN discovery port window (see its `dll/dll/network.h`):
+/// instances bind sequential ports from `DEFAULT_PORT` and announce across
+/// `[DEFAULT_PORT, DEFAULT_PORT + NUM_QUERY_PORTS)`.
+const DEFAULT_PORT: u16 = 47584;
+const NUM_QUERY_PORTS: u16 = 10;
+
 /// Location of the Goldberg 64-bit libsteam_api.so managed by hyprcoop.
 pub fn goldberg_so_path() -> PathBuf {
     profiles::data_dir().join("goldberg/libsteam_api.so")
@@ -100,6 +106,25 @@ pub fn build_shadow(
             gse_saves.display(),
         ),
     )?;
+
+    // Same-machine LAN discovery, firewall-proof.
+    //
+    // gbe_fork's peer announce broadcasts to 255.255.255.255 / the subnet
+    // broadcast across a port range (DEFAULT_PORT 47584 .. +NUM_QUERY_PORTS 10),
+    // which is how it normally finds same-machine instances (each binds a
+    // distinct sequential port 47584, 47585, … because SO_REUSEADDR is disabled
+    // in its Linux build). But a `deny incoming` firewall — Omarchy's default —
+    // drops those broadcasts as they arrive back on the real NIC.
+    //
+    // The emu's `custom_broadcasts` are exempt because we point them at
+    // loopback, but it sends each entry only to that entry's *own* port (not the
+    // range). So a bare `127.0.0.1` (port 0) reaches nobody. We therefore list
+    // loopback once per port in the query range, so every instance's announce
+    // reaches every other instance's listen port over `lo`. Verified end to end.
+    let broadcasts: String = (DEFAULT_PORT..DEFAULT_PORT + NUM_QUERY_PORTS)
+        .map(|port| format!("127.0.0.1:{port}\n"))
+        .collect();
+    std::fs::write(settings.join("custom_broadcasts.txt"), broadcasts)?;
 
     Ok(shadow)
 }
